@@ -1,4 +1,4 @@
-﻿app.viewModel = (function (logger, dataservice) {
+﻿app.viewModel = (function (logger, dataservice, breeze) {
 
     var suspendItemSave = false;
 
@@ -24,6 +24,21 @@
         vm.includeArchived.subscribe(getAllTodos);
         addComputeds();
         getAllTodos();
+        
+        dataservice.manager.entityChanged.subscribe(function (eventArgs) {
+            if (eventArgs.entityAction === breeze.EntityAction.EntityStateChange) {
+                if (eventArgs.entity.entityAspect.entityState === breeze.EntityState.Added &&
+                    vm.items.indexOf(eventArgs.entity) == -1) {
+                    extendItem(eventArgs.entity);
+                    vm.items.push(eventArgs.entity);
+                }
+                if (eventArgs.entity.entityAspect.entityState === breeze.EntityState.Deleted &&
+                    vm.items.indexOf(eventArgs.entity) >= 0) {
+                    vm.items.remove(eventArgs.entity);
+                }
+            }
+        });
+
     }
     function addComputeds() {
         vm.archiveCompletedMessage = ko.computed(function () {
@@ -135,7 +150,6 @@
         if (item) { item.isEditing(false); }
     }
     function removeItem (item) {
-        vm.items.remove(item);
         item.entityAspect.setDeleted();
         dataservice.saveChanges();
     }       
@@ -179,7 +193,7 @@
     }   
     //#endregion    
 
-})(app.logger, app.dataservice);
+})(app.logger, app.dataservice, breeze);
 
 // Bind viewModel to view in index.html
 ko.applyBindings(app.viewModel);

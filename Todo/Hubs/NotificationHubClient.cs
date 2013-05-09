@@ -60,6 +60,10 @@
                 {
                     // If we want this client to do something with the refresh as well.....not yet necessary                    
                 });
+            _notificationHub.On<string, object>("removeEntity", (entityName, id) =>
+            {
+                // If we want this client to do something with the remove as well.....not yet necessary                    
+            });
 
             // Start the connection
             _hubConnection.Start().Wait();
@@ -88,5 +92,27 @@
             _notificationHub.Invoke("refreshEntity", entityName, id);
         }
 
+        /// <summary>
+        /// Notify all clients to remove Entity
+        /// </summary>
+        /// <param name="entityName"></param>
+        /// <param name="id"></param>
+        public void NotifyRemoveEntity(string entityName, object id)
+        {
+            if (string.IsNullOrEmpty(entityName))
+            {
+                throw new ArgumentNullException("entityName");
+            }
+            if (id == null)
+            {
+                throw new ArgumentNullException("id");
+            }
+            if (_notificationHub == null)
+            {
+                throw new InvalidOperationException("Initialize NotificationHub prior to calling NotifyRemoveEntity.");
+            }
+
+            _notificationHub.Invoke("removeEntity", entityName, id);
+        }
     }
 }

@@ -8,5 +8,10 @@
         {
             Clients.All.refreshEntity(entityName, id);
         }
+
+        public void RemoveEntity(string entityName, object id)
+        {
+            Clients.All.removeEntity(entityName, id);
+        }
     }
 }

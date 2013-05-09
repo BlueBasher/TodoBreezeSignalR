@@ -27,6 +27,18 @@
             }
         };
 
+        hub.client.removeEntity = function (entityName, id) {
+            var entity = dataservice.manager.getEntityByKey(entityName, id);
+
+            // Only refresh the entity when the client has the specified entity already in local cache
+            if (entity) {
+                // This will make a delete call when calling SaveChanges. Not sure yet how to tell breeze to 'just' remove it...
+                entity.entityAspect.setDeleted();
+
+                logger.info('[' + entityName + '] removed');
+            }
+        };
+
         // Start the connection
         $.connection.hub.start().done(function () {
             logger.info('NotificationHub started!');
