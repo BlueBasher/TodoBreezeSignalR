@@ -1,25 +1,26 @@
 ﻿app.notificationHub = (function (logger, dataservice) {
 
     var notificationHub = {
+        init: initHub
     };
 
-    initHub();
-    
     return notificationHub; // done with setup; return module variable
 
     //#region private functions
     function initHub() {
         var hub = $.connection.notificationHub;
 
-        hub.client.refreshEntity = function (entityName, id) {
+        hub.client.refreshEntity = function (entityName, id, state) {
             function fetchSucceeded() {
                 logger.info('[' + entityName + '] refreshed');
             }
 
             var entity = dataservice.manager.getEntityByKey(entityName, id);
 
-            // Only refresh the entity when the client has the specified entity already in local cache
-            if (entity) {
+            // Only refresh a modified entity when the client has the specified entity already in local cache
+            // Fetch added entities always
+            if ((entity && state === 'Modified') || 
+                (state === 'Added')) {
                 // Call fetchEntityByKey with false so we always request it from the server
                 dataservice.manager
                     .fetchEntityByKey(entityName, id, false)

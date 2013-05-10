@@ -74,7 +74,8 @@
         /// </summary>
         /// <param name="entityName"></param>
         /// <param name="id"></param>
-        public void NotifyRefreshEntity(string entityName, object id)
+        /// <param name="toString"></param>
+        public void NotifyRefreshEntity(string entityName, object id, string state)
         {
             if (string.IsNullOrEmpty(entityName))
             {
@@ -89,7 +90,7 @@
                 throw new InvalidOperationException("Initialize NotificationHub prior to calling NotifyRefreshEntity.");
             }
 
-            _notificationHub.Invoke("refreshEntity", entityName, id);
+            _notificationHub.Invoke("refreshEntity", entityName, id, state);
         }
 
         /// <summary>

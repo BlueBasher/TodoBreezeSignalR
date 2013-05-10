@@ -4,9 +4,9 @@
 
     public class NotificationHub : Hub
     {
-        public void RefreshEntity(string entityName, object id)
+        public void RefreshEntity(string entityName, object id, string state)
         {
-            Clients.All.refreshEntity(entityName, id);
+            Clients.All.refreshEntity(entityName, id, state);
         }
 
         public void RemoveEntity(string entityName, object id)

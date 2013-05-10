@@ -71,7 +71,7 @@
                                                        .Select(key => key.Value)
                                                        .ToList();
 
-                        notificationHubClient.NotifyRefreshEntity(entityName, keys);
+                        notificationHubClient.NotifyRefreshEntity(entityName, keys, entity.State.ToString());
                     }
                 }
             }

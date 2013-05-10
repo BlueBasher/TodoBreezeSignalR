@@ -1,4 +1,4 @@
-﻿app.viewModel = (function (logger, dataservice, breeze) {
+﻿app.viewModel = (function (logger, dataservice, breeze, notificationHub) {
 
     var suspendItemSave = false;
 
@@ -24,18 +24,26 @@
         vm.includeArchived.subscribe(getAllTodos);
         addComputeds();
         getAllTodos();
-        
-        dataservice.manager.entityChanged.subscribe(function (eventArgs) {
-            if (eventArgs.entityAction === breeze.EntityAction.EntityStateChange) {
-                if (eventArgs.entity.entityAspect.entityState === breeze.EntityState.Added &&
-                    vm.items.indexOf(eventArgs.entity) == -1) {
-                    extendItem(eventArgs.entity);
-                    vm.items.push(eventArgs.entity);
-                }
-                if (eventArgs.entity.entityAspect.entityState === breeze.EntityState.Deleted &&
-                    vm.items.indexOf(eventArgs.entity) >= 0) {
-                    vm.items.remove(eventArgs.entity);
-                }
+
+        notificationHub.init();
+
+        dataservice.manager.entityChanged.subscribe(function(eventArgs) {
+
+            // Added entities
+            if ((eventArgs.entityAction === breeze.EntityAction.AttachOnQuery &&
+                 vm.items.indexOf(eventArgs.entity) == -1) || 
+                (eventArgs.entityAction === breeze.EntityAction.EntityStateChange &&
+                 eventArgs.entity.entityAspect.entityState.isAdded() &&
+                 vm.items.indexOf(eventArgs.entity) == -1)) {
+                extendItem(eventArgs.entity);
+                vm.items.push(eventArgs.entity);
+            }
+
+            // Modified entities
+            if (eventArgs.entityAction === breeze.EntityAction.EntityStateChange &&
+                eventArgs.entity.entityAspect.entityState.isDeleted() &&
+                vm.items.indexOf(eventArgs.entity) >= 0) {
+                vm.items.remove(eventArgs.entity);
             }
         });
 
@@ -78,11 +86,6 @@
             .fail(queryFailed);
     }
     function querySucceeded(data) {
-        vm.items([]);
-        data.results.forEach(function (item) {
-            extendItem(item);
-            vm.items.push(item);
-        });
         logger.info("Fetched Todos " +
             (vm.includeArchived() ? "including archived" : "excluding archived"));
     }
@@ -97,8 +100,6 @@
         });
 
         if (item.entityAspect.validateEntity()) {
-            extendItem(item);
-            vm.items.push(item);
             dataservice.saveChanges();
             vm.newTodo("");
         } else {
@@ -193,7 +194,7 @@
     }   
     //#endregion    
 
-})(app.logger, app.dataservice, breeze);
+})(app.logger, app.dataservice, breeze, app.notificationHub);
 
 // Bind viewModel to view in index.html
 ko.applyBindings(app.viewModel);
