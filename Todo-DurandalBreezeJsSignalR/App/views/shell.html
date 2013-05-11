@@ -1,0 +1,11 @@
+﻿<div>
+	<header data-bind="compose: {view: 'nav'}">
+	</header>
+    
+	<section class="container-fluid page-host"
+	     data-bind="compose: { model: router.activeItem, afterCompose: router.afterCompose, transition: 'entrance' }">
+	</section>
+
+	<footer data-bind="compose: {view: 'footer'}">
+	</footer>
+</div>

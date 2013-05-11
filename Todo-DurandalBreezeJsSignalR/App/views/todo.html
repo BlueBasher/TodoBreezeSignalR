@@ -1,0 +1,42 @@
+﻿<div class="row-fluid">
+    <section>
+        <div class="span12">
+            <div class="todoItems">
+                <div class="row-fluid">
+                    <div class="span8 offset2">
+                        <form class="newTodoItem" data-bind="submit: addItem">
+                            <input type="text" data-bind="value: newTodo, valueUpdate: 'afterkeydown'" placeholder="What needs to be done?">
+                        </form>
+                    </div>
+                </div>
+
+                <div class="row-fluid">
+                    <div data-bind="foreach: items">
+                        <div class="row-fluid">
+                            <div class="span8 offset2 todoItem">
+                                <div data-bind="visible: !isEditing()">
+                                    <form class="form-inline">
+                                        <div class="span6">
+                                            <input id="isDoneCheckbox" type="checkbox" data-bind="checked: isDone" />
+                                            <label for="isDoneCheckbox" data-bind="text: description, click: $parent.edit, css: { done: isDone }"></label>
+                                        </div>
+                                        <div class="span1">
+                                            <a class="icon-remove-sign" href="#" data-bind="click: $parent.removeItem"></a>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div data-bind="visible: isEditing">
+                                    <form data-bind="event: { submit: $parent.completeEdit }">
+                                        <div class="span6">
+                                            <input type="text" data-bind="value: description, hasfocus: isEditing" />
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>

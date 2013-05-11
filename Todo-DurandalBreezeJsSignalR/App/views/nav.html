@@ -1,0 +1,18 @@
+﻿<div class="navbar navbar-fixed-top">
+    <div class="navbar-inner">
+        <a class="brand" data-bind="attr: { href: router.visibleRoutes()[0].hash }">
+            <i class="icon-home"></i>
+        </a>
+        <ul class="nav" data-bind="foreach: router.visibleRoutes">
+            <li data-bind="css: { active: isActive }">
+                <a data-bind="attr: { href: hash }, html: caption"></a>
+            </li>
+        </ul>
+        <div class="loader pull-right" data-bind="css: { active: spinnerActive }">
+            <i class="icon-spinner icon-2x icon-spin"></i>
+        </div>
+        <form class="navbar-search pull-right" data-bind="submit: search, visible: canSearch">
+            <input type="text" class="search-query" accesskey="S" placeholder='Search'>
+        </form>
+    </div>
+</div>
