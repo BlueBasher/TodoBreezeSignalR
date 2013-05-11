@@ -42,9 +42,11 @@
                         if (eventArgs.entity.entityType.defaultResourceName === 'Todos') {
 
                             // Deleted entities
-                            if (eventArgs.entityAction === breeze.EntityAction.EntityStateChange &&
-                                eventArgs.entity.entityAspect.entityState.isDeleted() &&
-                                itemsObservable.indexOf(eventArgs.entity) >= 0) {
+                            if ((eventArgs.entityAction === breeze.EntityAction.Detach &&
+                                 itemsObservable.indexOf(eventArgs.entity) >= 0) ||
+                                (eventArgs.entityAction === breeze.EntityAction.EntityStateChange &&
+                                 eventArgs.entity.entityAspect.entityState.isDeleted() &&
+                                 itemsObservable.indexOf(eventArgs.entity) >= 0)) {
                                 itemsObservable.remove(eventArgs.entity);
                             }
 
@@ -138,9 +140,13 @@
                 }
 
                 if (entity && state === 'Deleted') {
-                    // TODO: This will make a delete call when calling SaveChanges. Not sure yet how to tell breeze to 'just' remove it...
-                    entity.entityAspect.setDeleted();
-                    log('[' + entityName + '] removed');
+                    // If the entity already has state deleted we don't need to do anything\
+                    if (entity.entityAspect.entityState !== breeze.EntityState.Deleted) {
+                        entity.entityAspect.entityState = breeze.EntityState.Added;
+                        entity.entityAspect.setDeleted();
+
+                        log('[' + entityName + '] removed');
+                    }
                 }
             };
             

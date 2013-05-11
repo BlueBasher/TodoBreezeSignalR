@@ -71,10 +71,7 @@
         /// </summary>
         /// <param name="entityName"></param>
         /// <param name="id"></param>
-<<<<<<< HEAD:Todo/Hubs/NotificationHubClient.cs
-        /// <param name="toString"></param>
-=======
->>>>>>> Massive refactor:Todo-DurandalBreezeJsSignalR/Hubs/NotificationHubClient.cs
+        /// <param name="state"></param>
         public void NotifyRefreshEntity(string entityName, object id, string state)
         {
             if (string.IsNullOrEmpty(entityName))
@@ -85,30 +82,7 @@
             {
                 throw new ArgumentNullException("id");
             }
-<<<<<<< HEAD:Todo/Hubs/NotificationHubClient.cs
-            if (_notificationHub == null)
-            {
-                throw new InvalidOperationException("Initialize NotificationHub prior to calling NotifyRefreshEntity.");
-            }
-
-            _notificationHub.Invoke("refreshEntity", entityName, id, state);
-        }
-
-        /// <summary>
-        /// Notify all clients to remove Entity
-        /// </summary>
-        /// <param name="entityName"></param>
-        /// <param name="id"></param>
-        public void NotifyRemoveEntity(string entityName, object id)
-        {
-            if (string.IsNullOrEmpty(entityName))
-            {
-                throw new ArgumentNullException("entityName");
-            }
-            if (id == null)
-=======
             if (string.IsNullOrEmpty(state))
->>>>>>> Massive refactor:Todo-DurandalBreezeJsSignalR/Hubs/NotificationHubClient.cs
             {
                 throw new ArgumentNullException("state");
             }
