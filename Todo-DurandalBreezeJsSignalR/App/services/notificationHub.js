@@ -13,7 +13,13 @@
             var hub = $.connection.notificationHub;
 
             hub.client.refreshEntity = function (entityName, id, state) {
+                logger.log('received: refreshEntity ' + entityName + ', ' + id  + ', ' + state, null, system.getModuleId(notificationHub));
                 datacontext.refreshEntity(entityName, id, state);
+            };
+
+            hub.client.refreshEntities = function (entities) {
+                logger.log('received: refreshEntities ', null, system.getModuleId(notificationHub));
+                datacontext.refreshEntities(entities);
             };
 
             // Start the connection

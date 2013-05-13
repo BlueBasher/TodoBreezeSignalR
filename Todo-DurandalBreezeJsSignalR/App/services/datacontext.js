@@ -9,7 +9,7 @@
             isSaving = ko.observable(false),
             hasChanges = ko.observable(false),
             //#region Public Methods
-            getAllTodos = function(itemsObservable, includeArchived, extendItem) {
+            getAllTodos = function (itemsObservable, includeArchived, extendItem) {
                 var query = breeze.EntityQuery
                     .from("Todos")
                     .orderBy("createdAt");
@@ -21,7 +21,7 @@
 
                 query = query.using(manager);
                 return query.execute()
-                    .then(function() { // ignore remote query results
+                    .then(function () { // ignore remote query results
                         return query.using(breeze.FetchStrategy.FromLocalCache).execute();
                     })
                     .then(querySucceeded)
@@ -30,7 +30,7 @@
                 function querySucceeded(data) {
                     if (itemsObservable) {
                         itemsObservable([]);
-                        data.results.forEach(function(item) {
+                        data.results.forEach(function (item) {
                             if ($.isFunction(extendItem)) {
                                 extendItem(item);
                             }
@@ -38,24 +38,24 @@
                         });
                     }
 
-                    manager.entityChanged.subscribe(function(eventArgs) {
+                    manager.entityChanged.subscribe(function (eventArgs) {
                         if (eventArgs.entity.entityType.defaultResourceName === 'Todos') {
 
                             // Deleted entities
                             if ((eventArgs.entityAction === breeze.EntityAction.Detach &&
-                                 itemsObservable.indexOf(eventArgs.entity) >= 0) ||
+                                    itemsObservable.indexOf(eventArgs.entity) >= 0) ||
                                 (eventArgs.entityAction === breeze.EntityAction.EntityStateChange &&
-                                 eventArgs.entity.entityAspect.entityState.isDeleted() &&
-                                 itemsObservable.indexOf(eventArgs.entity) >= 0)) {
+                                    eventArgs.entity.entityAspect.entityState.isDeleted() &&
+                                    itemsObservable.indexOf(eventArgs.entity) >= 0)) {
                                 itemsObservable.remove(eventArgs.entity);
                             }
 
                             // Added entities
                             if ((eventArgs.entityAction === breeze.EntityAction.AttachOnQuery &&
-                                 itemsObservable.indexOf(eventArgs.entity) == -1) ||
+                                    itemsObservable.indexOf(eventArgs.entity) == -1) ||
                                 (eventArgs.entityAction === breeze.EntityAction.EntityStateChange &&
-                                 eventArgs.entity.entityAspect.entityState.isAdded() &&
-                                 itemsObservable.indexOf(eventArgs.entity) == -1)) {
+                                    eventArgs.entity.entityAspect.entityState.isAdded() &&
+                                    itemsObservable.indexOf(eventArgs.entity) == -1)) {
                                 if ($.isFunction(extendItem)) {
                                     extendItem(eventArgs.entity);
                                 }
@@ -67,10 +67,10 @@
                     log('[Todos] refreshed', data, true);
                 }
             },
-            createTodo = function(initialValues) {
+            createTodo = function (initialValues) {
                 return manager.createEntity('TodoItem', initialValues);
             },
-            saveChanges = function() {
+            saveChanges = function () {
                 if (manager.hasChanges()) {
                     if (isSaving()) {
                         setTimeout(saveChanges, 50);
@@ -116,40 +116,102 @@
                     try { // fish out the first error
                         var firstErr = error.entitiesWithErrors[0].entityAspect.getValidationErrors()[0];
                         message += ": " + firstErr.errorMessage;
-                    } catch(e) { /* eat it for now */
+                    } catch (e) { /* eat it for now */
                     }
                     logError(message);
                 }
             },
-            refreshEntity = function(entityName, id, state) {
+            refreshEntity = function (entityName, id, state) {
+                refreshEntities([{
+                    Name: entityName,
+                    Id: id,
+                    State: state
+                }]);
+            },
+            refreshEntities = function (entities) {
 
                 function fetchSucceeded(data) {
-                    log('[' + entityName + '] refreshed', data.entity);
+                    if (data.results.length > 0) {
+                        log('# of [' + data.results[0].entityType.shortName + '] refreshed = ' + data.results.length, data);
+                    }
                 }
 
-                var entity = manager.getEntityByKey(entityName, id);
+                function groupByEntityName(data) {
+                    var refreshResult = [];
+                    var deleteResult = [];
+                    data.forEach(function (entity) {
+                        var localEntity = manager.getEntityByKey(entity.Name, entity.Id);
 
-                // Only refresh the entity when it's a newly added entity
-                // or it's modified and the client has the specified entity already in local cache
-                if ((state === 'Added') ||
-                    (entity && state === 'Modified')) {
-                    // Call fetchEntityByKey with false so we always request it from the server
-                    manager.fetchEntityByKey(entityName, id, false)
-                        .then(fetchSucceeded)
-                        .fail(queryFailed);
+                        // only process newly added entities
+                        // or entities that are in localCache and have been modified or deleted
+                        if ((entity.State === 'Added') ||
+                            (localEntity && entity.State === 'Modified')) {
+                            var tmpGroupedEntity = $.grep(refreshResult, function (item) {
+                                return item.name === entity.Name;
+                            });
+                            var groupedEntity = null;
+                            if (tmpGroupedEntity.length === 1) {
+                                groupedEntity = tmpGroupedEntity[0];
+                            }
+                            if (!groupedEntity) {
+                                groupedEntity={
+                                    name: entity.Name,
+                                    entities: []
+                                };
+
+                                refreshResult.push(groupedEntity);
+                            }
+
+                            groupedEntity.entities.push(entity);
+                        }
+                        else if (localEntity && entity.State === 'Deleted') {
+                            deleteResult.push(localEntity);
+                        }
+                    });
+
+                    return {
+                        refreshEntities: refreshResult,
+                        deleteEntities: deleteResult
+                    };
                 }
 
-                if (entity && state === 'Deleted') {
-                    // If the entity already has state deleted we don't need to do anything\
+                var groupedEntities = groupByEntityName(entities);
+                // Delete the deleted entities from localCache
+                groupedEntities.deleteEntities.forEach(function (entity) {
+                    // If the localEntity already has state deleted we don't need to do anything
                     if (entity.entityAspect.entityState !== breeze.EntityState.Deleted) {
                         entity.entityAspect.entityState = breeze.EntityState.Added;
                         entity.entityAspect.setDeleted();
 
-                        log('[' + entityName + '] removed');
+                        log('[' + entity.entityType.shortName + '] removed');
                     }
-                }
+                });
+
+                // Refresh the added or modified entities
+                groupedEntities.refreshEntities.forEach(function (groupedEntity) {
+                    var predicate = null;
+                    groupedEntity.entities.forEach(function (entity) {
+                        if (predicate) {
+                            predicate = predicate.or('id', breeze.FilterQueryOp.Equals, entity.Id);
+                        } else {
+                            predicate = new breeze.Predicate('id', breeze.FilterQueryOp.Equals, entity.Id);
+                        }
+                    });
+
+                    if (predicate) {
+                        // Call fetchEntityByKey with false so we always request it from the server
+                        var resourceName = manager.metadataStore._getEntityType(groupedEntity.name, false).defaultResourceName;
+                        var query = breeze.EntityQuery
+                            .from(resourceName) // todo: need to use entityType.defaultResourceName for this. Same as fetchEntityByKey
+                            .where(predicate);
+                        query.using(manager)
+                            .execute()
+                            .then(fetchSucceeded)
+                            .fail(queryFailed);
+                    }
+                });
             };
-            
+
         //#endregion 
 
         manager.hasChangesChanged.subscribe(function (eventArgs) {
@@ -162,7 +224,8 @@
             getAllTodos: getAllTodos,
             createTodo: createTodo,
             saveChanges: saveChanges,
-            refreshEntity: refreshEntity
+            refreshEntity: refreshEntity,
+            refreshEntities: refreshEntities
         };
 
         return datacontext;
@@ -176,7 +239,7 @@
             var msg = 'Error retreiving data. ' + error.message;
             logError(msg, error);
         }
-        
+
         function configureBreezeManager() {
             breeze.NamingConvention.camelCase.setAsDefault();
             var mgr = new breeze.EntityManager(config.serviceName);

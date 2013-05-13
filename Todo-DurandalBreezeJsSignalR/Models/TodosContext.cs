@@ -93,10 +93,13 @@
                     // TODO: Hardcoding this Url can be improved...duh..
                     notificationHubClient.Initialize("http://localhost:51577/");
 
-                    foreach (var entity in changeSet)
-                    {
-                        notificationHubClient.NotifyRefreshEntity(entity.Name, entity.Keys, entity.State.ToString());
-                    }
+                    notificationHubClient.NotifyRefreshEntities(changeSet.Select(c => new
+                        NotificationHub.EntityState
+                        {
+                            Name = c.Name,
+                            Id = c.Keys,
+                            State = c.State.ToString()
+                        }).ToList());
                 }
             }
             catch (Exception)

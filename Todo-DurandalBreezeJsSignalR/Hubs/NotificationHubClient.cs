@@ -1,6 +1,8 @@
 ﻿namespace Todo_DurandalBreezeJsSignalR.Hubs
 {
     using System;
+    using System.Collections.Generic;
+    using System.Diagnostics;
     using Microsoft.AspNet.SignalR.Client.Hubs;
 
     /// <summary>
@@ -60,7 +62,9 @@
             _notificationHub = _hubConnection.CreateHubProxy("NotificationHub");
 
             // if this client also needs to do something with refreshing entities
-            //_notificationHub.On<string, object>("refreshEntity", (entityName, id, state) => { });
+            _notificationHub.On<string, object, string>(
+                "refreshEntity",
+                (entityName, id, state) => Debug.Print("Received: RefreshEntity {0}, {1}, {2}", entityName, id, state));
 
             // Start the connection
             _hubConnection.Start().Wait();
@@ -91,7 +95,23 @@
                 throw new InvalidOperationException("Initialize NotificationHub prior to calling NotifyRefreshEntity.");
             }
 
-            _notificationHub.Invoke("refreshEntity", entityName, id, state);
+            _notificationHub.Invoke("refreshEntity",
+                                    new NotificationHub.EntityState
+                                        {
+                                            Name = entityName,
+                                            Id = id,
+                                            State = state
+                                        });
         }
+
+        public void NotifyRefreshEntities(List<NotificationHub.EntityState> entities)
+        {
+            if (entities == null)
+            {
+                throw new ArgumentNullException("entities");
+            }
+            _notificationHub.Invoke("refreshEntities", entities);
+        }
+
     }
 }

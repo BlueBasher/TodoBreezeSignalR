@@ -112,14 +112,76 @@ table {
         text-decoration: none;
     }
 
+/* TodoItems
+----------------------------------------------------------*/
 .todoItems {
     border: 2px solid black;
+    -moz-box-shadow: 10px 10px 5px #888;
+    -webkit-box-shadow: 10px 10px 5px #888;
+    box-shadow: 10px 10px 5px #888;
     padding-top: 20px;
-    padding-bottom: 20px;
+    -webkit-border-radius: 8px;
+    -moz-border-radius: 8px;
     border-radius: 8px;
     width: 80%;
     margin-left: 10%;
 }
+
+    .todoItems label,
+    .todoItems a {
+        font-size: 1.5em;
+    }
+
+        .todoItems label.archived {
+            color: lightgrey;
+        }
+
+    .todoItems input[type='checkbox'] {
+        margin-bottom: 8px;
+    }
+
+    .todoItems .footer {
+        background-color: #1e5799;
+        -webkit-border-bottom-left-radius: 8px;
+        -moz-border-bottom-left-radius: 8px;
+        border-bottom-left-radius: 8px;
+        -webkit-border-bottom-right-radius: 8px;
+        -moz-border-bottom-right-radius: 8px;
+        border-bottom-right-radius: 8px;
+        margin-top: 20px;
+    }
+
+        .todoItems .footer label,
+        .todoItems .footer a {
+            color: #fff;
+            cursor: default;
+            margin: 8px;
+        }
+        .todoItems .footer label {
+            margin-top: 12px;
+        }
+
+        .todoItems .footer a {
+            cursor: pointer;
+            text-decoration: none;
+            float: right;
+            border-radius: 8px;
+            border: 4px solid #e5e5e5;
+            -webkit-box-shadow: 1px 1px #d3d3d3;
+            -moz-box-shadow: 1px 1px #d3d3d3;
+            box-shadow: 1px 1px #d3d3d3;
+            padding-left: 8px;
+            padding-right: 8px;
+            padding-top: 4px;
+        }
+
+            .todoItems .footer a:hover {
+                -moz-transform: scale(1.02);
+                -ms-transform: scale(1.02);
+                -o-transform: scale(1.02);
+                -webkit-transform: scale(1.02);
+                transform: scale(1.02);
+            }
 
 .newTodoItem {
     margin: 4px;
@@ -127,7 +189,9 @@ table {
 
     .newTodoItem input {
         margin: 8px;
-        font-size: 1.5em;
+        margin-bottom: 20px;
+        font-size: 2.5em;
+        height: 40px;
     }
 
         .newTodoItem input[type='text'] {
@@ -139,7 +203,6 @@ table {
 }
 
     .todoItem label {
-        cursor: default;
         font-size: 2em;
     }
 
@@ -151,6 +214,10 @@ table {
         /*Hack for IE9 repaint bug*/
         padding: 1px;
         text-decoration: line-through;
+    }
+
+    .todoItem label.archived {
+        color: lightgrey;
     }
 
     .todoItem input[type='checkbox'] {

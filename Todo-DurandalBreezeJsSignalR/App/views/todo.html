@@ -4,9 +4,15 @@
             <div class="todoItems">
                 <div class="row-fluid">
                     <div class="span8 offset2">
-                        <form class="newTodoItem" data-bind="submit: addItem">
+                        <form class="newTodoItem row-fluid" data-bind="submit: addItem">
                             <input type="text" data-bind="value: newTodo, valueUpdate: 'afterkeydown'" placeholder="What needs to be done?">
                         </form>
+                        <div class="form-inline row-fluid">
+                            <input id="markAll" type="checkbox" data-bind="checked: markAllCompleted">
+                            <label for="markAll">Mark all as complete </label>
+                            <input id="includeArchived" type="checkbox" data-bind="checked: includeArchived">
+                            <label for="includeArchived" class="archived">Show archived</label>
+                        </div>
                     </div>
                 </div>
 
@@ -17,8 +23,8 @@
                                 <div data-bind="visible: !isEditing()">
                                     <form class="form-inline">
                                         <div class="span6">
-                                            <input id="isDoneCheckbox" type="checkbox" data-bind="checked: isDone" />
-                                            <label for="isDoneCheckbox" data-bind="text: description, click: $parent.edit, css: { done: isDone }"></label>
+                                            <input id="isDoneCheckbox" type="checkbox" data-bind="checked: isDone, disable: isArchived()" />
+                                            <label for="isDoneCheckbox" data-bind="text: description, click: $parent.edit, css: { done: isDone, archived: isArchived }"></label>
                                         </div>
                                         <div class="span1">
                                             <a class="icon-remove-sign" href="#" data-bind="click: $parent.removeItem"></a>
@@ -34,6 +40,14 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+                <div class="row-fluid footer">
+                    <div class="span6">
+                        <label data-bind="visible: itemsLeftMessage, text: itemsLeftMessage"></label>                        
+                    </div>
+                    <div class="span6">
+                        <a href="#" data-bind="visible: archiveCompletedMessage, click: archiveCompletedItems, text: archiveCompletedMessage"></a>
                     </div>
                 </div>
             </div>
