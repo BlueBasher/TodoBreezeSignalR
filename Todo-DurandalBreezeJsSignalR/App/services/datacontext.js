@@ -130,6 +130,40 @@
             },
             refreshEntities = function (entities) {
 
+                var groupedEntities = groupByEntityName(entities);
+
+                // Delete the deleted entities from localCache
+                groupedEntities.deleteEntities.forEach(function (entity) {
+                    // If the localEntity already has state deleted we don't need to do anything
+                    if (entity.entityAspect.entityState !== breeze.EntityState.Deleted) {
+                        entity.entityAspect.entityState = breeze.EntityState.Added;
+                        entity.entityAspect.setDeleted();
+
+                        log('[' + entity.entityType.shortName + '] removed');
+                    }
+                });
+
+                // Refresh the added or modified entities
+                groupedEntities.refreshEntities.forEach(function (groupedEntity) {
+                    var entityType = manager.metadataStore.getEntityType(groupedEntity.name);
+
+                    var predicates = null;
+                    groupedEntity.entities.forEach(function (entity) {
+                        var keyPredicate = createKeyPredicate(entityType, entity.Id);
+                        predicates = (predicates) ? predicates.or(keyPredicate) : keyPredicate;
+                    });
+
+                    if (predicates) {
+                        var query = breeze.EntityQuery
+                            .from(entityType.defaultResourceName)
+                            .where(predicates);
+                        query.using(manager)
+                            .execute()
+                            .then(fetchSucceeded)
+                            .fail(queryFailed);
+                    }
+                });
+
                 function fetchSucceeded(data) {
                     if (data.results.length > 0) {
                         log('# of [' + data.results[0].entityType.shortName + '] refreshed = ' + data.results.length, data);
@@ -146,6 +180,7 @@
                         // or entities that are in localCache and have been modified or deleted
                         if ((entity.State === 'Added') ||
                             (localEntity && entity.State === 'Modified')) {
+
                             var tmpGroupedEntity = $.grep(refreshResult, function (item) {
                                 return item.name === entity.Name;
                             });
@@ -154,7 +189,7 @@
                                 groupedEntity = tmpGroupedEntity[0];
                             }
                             if (!groupedEntity) {
-                                groupedEntity={
+                                groupedEntity = {
                                     name: entity.Name,
                                     entities: []
                                 };
@@ -175,41 +210,16 @@
                     };
                 }
 
-                var groupedEntities = groupByEntityName(entities);
-                // Delete the deleted entities from localCache
-                groupedEntities.deleteEntities.forEach(function (entity) {
-                    // If the localEntity already has state deleted we don't need to do anything
-                    if (entity.entityAspect.entityState !== breeze.EntityState.Deleted) {
-                        entity.entityAspect.entityState = breeze.EntityState.Added;
-                        entity.entityAspect.setDeleted();
-
-                        log('[' + entity.entityType.shortName + '] removed');
+                function createKeyPredicate(entityType, keys) {
+                    var preds = null;
+                    var keyProps = entityType.keyProperties;
+                    var n = Math.min(keyProps.length, keys.length);
+                    for (var i = 0; i < n; i++) {
+                        var pred = breeze.Predicate.create(keyProps[i].name, breeze.FilterQueryOp.Equals, keys[i]);
+                        preds = (preds) ? preds.and(pred) : pred;
                     }
-                });
-
-                // Refresh the added or modified entities
-                groupedEntities.refreshEntities.forEach(function (groupedEntity) {
-                    var predicate = null;
-                    groupedEntity.entities.forEach(function (entity) {
-                        if (predicate) {
-                            predicate = predicate.or('id', breeze.FilterQueryOp.Equals, entity.Id);
-                        } else {
-                            predicate = new breeze.Predicate('id', breeze.FilterQueryOp.Equals, entity.Id);
-                        }
-                    });
-
-                    if (predicate) {
-                        // Call fetchEntityByKey with false so we always request it from the server
-                        var resourceName = manager.metadataStore._getEntityType(groupedEntity.name, false).defaultResourceName;
-                        var query = breeze.EntityQuery
-                            .from(resourceName) // todo: need to use entityType.defaultResourceName for this. Same as fetchEntityByKey
-                            .where(predicate);
-                        query.using(manager)
-                            .execute()
-                            .then(fetchSucceeded)
-                            .fail(queryFailed);
-                    }
-                });
+                    return preds;
+                }
             };
 
         //#endregion 
