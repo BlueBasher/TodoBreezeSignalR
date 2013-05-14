@@ -181,6 +181,7 @@
                         if ((entity.State === 'Added') ||
                             (localEntity && entity.State === 'Modified')) {
 
+                            // get the group for this entity
                             var tmpGroupedEntity = $.grep(refreshResult, function (item) {
                                 return item.name === entity.Name;
                             });
@@ -188,6 +189,7 @@
                             if (tmpGroupedEntity.length === 1) {
                                 groupedEntity = tmpGroupedEntity[0];
                             }
+                            // if the group for this entity doesn't exist, create it
                             if (!groupedEntity) {
                                 groupedEntity = {
                                     name: entity.Name,
@@ -197,6 +199,7 @@
                                 refreshResult.push(groupedEntity);
                             }
 
+                            // Add the entity to the group
                             groupedEntity.entities.push(entity);
                         }
                         else if (localEntity && entity.State === 'Deleted') {
